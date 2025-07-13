@@ -493,7 +493,7 @@
        return;
      }
 
-     const cart = products.map(product => {
+     const cartItems = products.map(product => {
        const qty = parseInt(document.getElementById(`qty-${product.id}`)?.innerText || 0);
        if (qty > 0) {
          const flavorEl = product.flavors ? document.getElementById(`flavor-${product.id}`) : null;
@@ -509,47 +509,52 @@
          return {
            id: product.id,
            name: product.name,
-           qty,
-           flavor,
+           qty: qty,
+           flavor: flavor,
            price: product.price
          };
        }
        return null;
      }).filter(Boolean);
 
-     if (cart.length === 0) {
+     if (cartItems.length === 0) {
        alert("Корзина пуста");
        return;
      }
 
-     const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+     const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
      const total = subtotal + deliveryPrice;
 
-     const summary = {
-       address,
-       district,
-       items: cart,
-       subtotal,
-       deliveryPrice,
-       total,
-       timestamp: new Date().toISOString()
+     const orderData = {
+       items: cartItems,
+       address: address,
+       district: district,
+       deliveryPrice: deliveryPrice,
+       subtotal: subtotal,
+       total: total,
+       phone: window.Telegram?.WebApp?.initDataUnsafe?.user?.phone_number || "не указан"
      };
 
      // Сохраняем обновленные остатки
      saveStock(serverStock);
 
+     // Отправка данных в Telegram бот
+     if (window.Telegram && window.Telegram.WebApp) {
+       try {
+         window.Telegram.WebApp.sendData(JSON.stringify(orderData));
+         window.Telegram.WebApp.close();
+       } catch (e) {
+         console.error("Ошибка отправки данных в Telegram:", e);
+         alert("Заказ оформлен! Менеджер свяжется с вами.");
+       }
+     } else {
+       console.log("Данные заказа (тестовый режим):", orderData);
+       alert("Заказ оформлен! Менеджер свяжется с вами.");
+     }
+
      // Обновляем интерфейс после заказа
      renderProducts();
      updateCartDisplay();
-
-     // Отправка в Telegram (если подключен)
-     if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
-       Telegram.WebApp.sendData(JSON.stringify(summary));
-       Telegram.WebApp.close();
-     } else {
-       console.log("Заказ оформлен:", summary);
-       alert("Заказ отправлен!");
-     }
    }
 
    // Инициализация при загрузке
@@ -559,5 +564,5 @@
    });
  </script>
 </body>
-</html>
+</html> 
 ```
