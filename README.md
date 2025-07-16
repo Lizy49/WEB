@@ -6,6 +6,7 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>TLP | SHOP</title>
  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+ <script src="https://telegram.org/js/telegram-web-app.js"></script>
  <style>
    * { margin: 0; padding: 0; box-sizing: border-box; }
    body {
@@ -235,6 +236,11 @@
  </footer>
 
  <script>
+   // Инициализация Telegram WebApp
+   const tg = window.Telegram.WebApp;
+   tg.expand();
+   tg.enableClosingConfirmation();
+
    // Загрузка остатков из localStorage
    function loadStock() {
      const savedStock = localStorage.getItem('tlpShopStock');
@@ -493,68 +499,50 @@
        return;
      }
 
-     const cartItems = products.map(product => {
+     const cartItems = [];
+     let subtotal = 0;
+
+     for (const product of products) {
        const qty = parseInt(document.getElementById(`qty-${product.id}`)?.innerText || 0);
        if (qty > 0) {
          const flavorEl = product.flavors ? document.getElementById(`flavor-${product.id}`) : null;
          const flavor = flavorEl ? flavorEl.value : 'Стандарт';
          
-         // Обновляем остатки
-         if (product.flavors && flavorEl) {
-           product.flavors[flavor] -= qty;
-           if (product.flavors[flavor] < 0) product.flavors[flavor] = 0;
-           serverStock[product.id][flavor] = product.flavors[flavor];
-         }
-
-         return {
+         cartItems.push({
            id: product.id,
            name: product.name,
            qty: qty,
            flavor: flavor,
            price: product.price
-         };
+         });
+
+         subtotal += product.price * qty;
        }
-       return null;
-     }).filter(Boolean);
+     }
 
      if (cartItems.length === 0) {
        alert("Корзина пуста");
        return;
      }
 
-     const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
      const total = subtotal + deliveryPrice;
 
      const orderData = {
        items: cartItems,
        address: address,
        district: district,
-       deliveryPrice: deliveryPrice,
-       subtotal: subtotal,
        total: total,
-       phone: window.Telegram?.WebApp?.initDataUnsafe?.user?.phone_number || "не указан"
+       phone: tg.initDataUnsafe?.user?.phone_number || "не указан"
      };
-
-     // Сохраняем обновленные остатки
-     saveStock(serverStock);
 
      // Отправка данных в Telegram бот
      if (window.Telegram && window.Telegram.WebApp) {
-       try {
-         window.Telegram.WebApp.sendData(JSON.stringify(orderData));
-         window.Telegram.WebApp.close();
-       } catch (e) {
-         console.error("Ошибка отправки данных в Telegram:", e);
-         alert("Заказ оформлен! Менеджер свяжется с вами.");
-       }
+       tg.sendData(JSON.stringify(orderData));
+       tg.close();
      } else {
-       console.log("Данные заказа (тестовый режим):", orderData);
+       console.log("Тестовые данные заказа:", orderData);
        alert("Заказ оформлен! Менеджер свяжется с вами.");
      }
-
-     // Обновляем интерфейс после заказа
-     renderProducts();
-     updateCartDisplay();
    }
 
    // Инициализация при загрузке
@@ -564,5 +552,5 @@
    });
  </script>
 </body>
-</html> 
+</html>
 ```
