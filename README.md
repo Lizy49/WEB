@@ -6,7 +6,6 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>TLP | SHOP</title>
  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
- <script src="https://telegram.org/js/telegram-web-app.js"></script>
  <style>
    * { margin: 0; padding: 0; box-sizing: border-box; }
    body {
@@ -213,11 +212,13 @@
    <div id="cart-items"></div>
    <select id="delivery">
      <option value="">-- Выберите район доставки --</option>
-     <option value="200">Центр (200₽)</option>
-     <option value="200">Северный район (200₽)</option>
-     <option value="250">Южный район (250₽)</option>
-     <option value="300">Западный район (300₽)</option>
-     <option value="350">Восточный район (350₽)</option>
+     <option value="200">По городу(200₽)</option>
+     <option value="250">Пригородный, моргородок, автотек(250₽)</option>
+     <option value="300">Пионерный(300₽)</option>
+     <option value="300">Солнечный(350₽)</option>
+     <option value="500">Сокол, Ола (500₽)</option>
+     <option value="1000">Палатка (1000₽)</option>
+     <option value="0"> Самовывоз (0₽)</option>    
    </select>
    <p class="delivery-info">Доставка в течение 60 минут после подтверждения заказа</p>
    <input type="text" id="address" placeholder="Укажите точный адрес доставки" />
@@ -229,31 +230,27 @@
    <hr style="border-color: rgba(52, 152, 219, 0.2); margin-bottom: 15px;">
    <p>© 2025 TLP | SHOP. Все права защищены.</p>
    <p>
-     <a href="https://t.me/tlpshop" target="_blank">Наш Telegram</a> |
+     <a href="https://t.me/tlpshopmgdn" target="_blank">Наш Telegram</a> |
      <a href="#">Политика конфиденциальности</a> |
      <a href="#">Контакты</a>
    </p>
  </footer>
 
  <script>
-   // Инициализация Telegram WebApp
-   const tg = window.Telegram.WebApp;
-   tg.expand();
-   tg.enableClosingConfirmation();
-
    // Загрузка остатков из localStorage
    function loadStock() {
      const savedStock = localStorage.getItem('tlpShopStock');
      return savedStock ? JSON.parse(savedStock) : {
-       "1": {"Мята": 5, "Манго": 5, "Кола": 5, "Ягоды": 5, "Дыня": 5},
-       "2": {"Табак": 5, "Вишня": 5, "Ваниль": 5, "Кофе": 5, "Карамель": 5},
-       "3": {"Яблоко": 5, "Груша": 5, "Ананас": 5, "Киви": 5, "Арбуз": 5},
-       "4": {"Ледяная вишня": 5, "Тропик": 5, "Цитрус": 5, "Молочный": 5, "Ментол": 5},
-       "5": {"Классика": 5, "Фрукты": 5, "Ягоды": 5, "Экзотика": 5, "Десерт": 5},
-       "6": {"Ледяная мята": 5},
-       "7": {"Черника": 5},
-       "8": {"Кокос": 5},
-       "9": {"Персик": 5}
+       "1": {"Еживика черника малина": 1, "Мята": 1, "Сакура виноград": 1, "Тройная ягода": 1, "Черника малина": 1, "Клюква виноград": 1, "Энергетик черная смородина": 1, "Арбуз": 1, "Клубника киви": 1, "Капучино": 1, "Черника малина ментол": 1}, 
+       "2": {"Лайм": 1, "Киви маракуйя гуава": 1, "Ледяной арбуз": 1, "Гранатовый сок": 1},
+       "3": {},
+       "4": {"Подик": 1},
+       "5": {"Экзотические фрукты": 1},
+       "6": {"Испарик": 1},
+       "7": {"0.6": 1 , "0.8": 1},
+       "8": {"АКБ": 1},
+       "9": {"Черная вишня": 1, "Киви гуава маракуйя": 1, "Персик бабл гам": 1, "Банан кокос": 1, "Манго грейпфрут": 1, "Земляничный мохито": 1, "Северные ягоды": 1, "Грейпфрутовый швепс": 1, "Гранат смородина": 1, "Фруктовые пластинки": 1},
+       "10": {"Апельсиновая газировка": 1, "Брусничный морс": 1, "Ежевичный лимонад": 1, "Пина колада с грушей": 1, "Освежающий лимонад": 1, "Малиновый пунш": 1, "Морс черника виноград": 1, "Яблочный лимонад": 1}
      };
    }
 
@@ -267,84 +264,92 @@
    const products = [
      { 
        id: 1, 
-       name: "TLP Pod Basic", 
-       category: "pod", 
-       price: 1900, 
-       image: 'https://via.placeholder.com/300x200?text=TLP+Pod+Basic', 
-       description: "Компактный и надежный", 
+       name: "WAKA 20000 КОПИЯ", 
+       category: "disposable", 
+       price: 1500, 
+       image: 'dis/1.jpg', 
+       description: "20 000 затяжек? Ну, если не жаришь её как последнюю хуйню в твоей жалкой жизни. Аккум 850mAh — хватит, чтобы вырубить даже слона. Выбирай вкус и наслаждайся, пока не сдохнешь от никотинового кайфа.", 
        flavors: serverStock["1"] 
      },
      { 
        id: 2, 
-       name: "TLP Pod Pro", 
-       category: "pod", 
-       price: 2500, 
-       image: 'https://via.placeholder.com/300x200?text=TLP+Pod+Pro', 
-       description: "Профессиональная серия", 
+       name: "Lost Mary 16000", 
+       category: "disposable", 
+       price: 1700, 
+       image: 'dis/2.jpg', 
+       description: "16 000 тяг, но ты всё равно сожрёшь её за два дня, слабак. Профессиональная серия — потому что для тех, у кого яйца есть. Вкусы? Да хоть табак, хоть ваниль — главное, чтобы мозги вырубило.  ", 
        flavors: serverStock["2"] 
      },
      { 
        id: 3, 
-       name: "TLP One", 
-       category: "disposable", 
-       price: 1200, 
-       image: 'https://via.placeholder.com/300x200?text=TLP+One', 
-       description: "Удобная одноразка", 
+       name: "WAKA 69 мг", 
+       price: 550, 
+       image: 'ju/1.jpg', 
+       description: "69 мг никотина — не для школьников, а для дегенератов, которые хотят отъехать с первой затяжки. Лёд, фрукты или пиздатый микс — выбирай и готовься к тому, что лёгкие скажут пока.", 
        flavors: serverStock["3"] 
      },
      { 
        id: 4, 
-       name: "TLP One Max", 
-       category: "disposable", 
-       price: 1800, 
-       image: 'https://via.placeholder.com/300x200?text=TLP+One+Max', 
-       description: "Большой ресурс", 
+       name: "Smoant Knight 80 kit", 
+       category: "pod", 
+       price: 3700, 
+       image: 'pod/1.jpg', 
+       description: "Не хуйня за 500 рублей, а серьёзный девайс для тех, кто не сосёт слабые испарители. Мощность, контроль и долгий ресурс — если, конечно, ты не разъебешь его за неделю.", 
        flavors: serverStock["4"] 
      },
      { 
        id: 5, 
-       name: "TLP Liquid", 
+       name: "Анаржия&зевс 70мг", 
        category: "juice", 
-       price: 800, 
-       image: 'https://via.placeholder.com/300x200?text=TLP+Liquid', 
-       description: "Премиальная жидкость", 
+       price: 500, 
+       image: 'ju/2.jpg', 
+       description: "70 мг никотина — это не шутки, уёбок. Один пых — и ты уже в космосе. Для тех, кому обычные жижи кажутся водой.", 
        flavors: serverStock["5"] 
      },
      { 
        id: 6, 
-       name: "TLP Ice", 
-       category: "juice", 
-       price: 900, 
-       image: 'https://via.placeholder.com/300x200?text=TLP+Ice', 
-       description: "Освежающая серия", 
+       name: "Испарик К-1", 
+       category: "vaporizer", 
+       price: 350, 
+       image: 'vap/1.jpg', 
+       description: "Освежает так, будто тебя ебнули мятным ураганом в глотку. Лёд, фрукты или что-то посерьёзнее — выбирай и не ной, если лёгкие взвоют.", 
        flavors: serverStock["6"] 
      },
      { 
        id: 7, 
-       name: "TLP Vape", 
+       name: "Картридж на xros 0.6/0.8 ом", 
        category: "vaporizer", 
-       price: 2200, 
-       image: 'https://via.placeholder.com/300x200?text=TLP+Vape', 
-       description: "Профессиональный испаритель", 
+       price: 450, 
+       image: 'vap/2.jpg', 
+       description: "Вставил, затянулся — и понеслась. Никакого геморроя с самозамесом, просто чистая никотиновая бомба.", 
        flavors: serverStock["7"] 
      },
      { 
        id: 8, 
-       name: "TLP Case", 
+       name: "АКБ банан", 
        category: "accessories", 
-       price: 500, 
-       image: 'https://via.placeholder.com/300x200?text=TLP+Case', 
-       description: "Чехол для устройств", 
+       price: 600, 
+       image: 'acc/1.jpg', 
+       description: "Чтоб твой девайс не сдох нахуй посреди дня. Мощная, удобная, но всё равно ты её потеряешь через месяц.", 
        flavors: serverStock["8"] 
      },
      { 
        id: 9, 
-       name: "TLP Charger", 
-       category: "accessories", 
-       price: 700, 
-       image: 'https://via.placeholder.com/300x200?text=TLP+Charger', 
-       description: "Быстрая зарядка", 
+       name: "Rick and Morty Bad Trip 70мг", 
+       category: "juice", 
+       price: 550, 
+       image: 'ju/3.jpg', 
+       description: "70 мг никотина и вкус, от которого реально словишь bad trip. Если хочешь ощутить, как твои мозги плавятся — это твой выбор.", 
        flavors: serverStock["9"] 
+     },
+     {
+      id: 10,
+      name: "Podonki Vintage 70мг",
+      category: "juice",
+      price: 550,
+      image: 'ju/4.jpg',
+      description: "Старая школа с пиздатым ударом. 70 мг — как в те времена, когда вейперы ещё не были хипстерами.",
+      flavors: serverStock["10"]
      }
    ];
 
@@ -499,50 +504,68 @@
        return;
      }
 
-     const cartItems = [];
-     let subtotal = 0;
-
-     for (const product of products) {
+     const cartItems = products.map(product => {
        const qty = parseInt(document.getElementById(`qty-${product.id}`)?.innerText || 0);
        if (qty > 0) {
          const flavorEl = product.flavors ? document.getElementById(`flavor-${product.id}`) : null;
          const flavor = flavorEl ? flavorEl.value : 'Стандарт';
          
-         cartItems.push({
+         // Обновляем остатки
+         if (product.flavors && flavorEl) {
+           product.flavors[flavor] -= qty;
+           if (product.flavors[flavor] < 0) product.flavors[flavor] = 0;
+           serverStock[product.id][flavor] = product.flavors[flavor];
+         }
+
+         return {
            id: product.id,
            name: product.name,
            qty: qty,
            flavor: flavor,
            price: product.price
-         });
-
-         subtotal += product.price * qty;
+         };
        }
-     }
+       return null;
+     }).filter(Boolean);
 
      if (cartItems.length === 0) {
        alert("Корзина пуста");
        return;
      }
 
+     const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
      const total = subtotal + deliveryPrice;
 
      const orderData = {
        items: cartItems,
        address: address,
        district: district,
+       deliveryPrice: deliveryPrice,
+       subtotal: subtotal,
        total: total,
-       phone: tg.initDataUnsafe?.user?.phone_number || "не указан"
+       phone: window.Telegram?.WebApp?.initDataUnsafe?.user?.phone_number || "не указан"
      };
+
+     // Сохраняем обновленные остатки
+     saveStock(serverStock);
 
      // Отправка данных в Telegram бот
      if (window.Telegram && window.Telegram.WebApp) {
-       tg.sendData(JSON.stringify(orderData));
-       tg.close();
+       try {
+         window.Telegram.WebApp.sendData(JSON.stringify(orderData));
+         window.Telegram.WebApp.close();
+       } catch (e) {
+         console.error("Ошибка отправки данных в Telegram:", e);
+         alert("Заказ оформлен! Менеджер свяжется с вами.");
+       }
      } else {
-       console.log("Тестовые данные заказа:", orderData);
+       console.log("Данные заказа (тестовый режим):", orderData);
        alert("Заказ оформлен! Менеджер свяжется с вами.");
      }
+
+    //  Обновляем интерфейс после заказа
+     renderProducts();
+     updateCartDisplay();
    }
 
    // Инициализация при загрузке
@@ -552,5 +575,5 @@
    });
  </script>
 </body>
-</html>
+</html> 
 ```
