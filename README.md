@@ -46,6 +46,9 @@
      transition: all 0.3s;
      font-size: 0.9rem;
    }
+   .category-tabs button.active {
+     background: #2980b9;
+   }
    .category-tabs button:hover { background: #2980b9; }
    .products { 
      display: grid; 
@@ -213,7 +216,8 @@
    .add-flavor-btn:hover {
      background: #2980b9;
    }
-   .admin-panel {
+   #adminPanel {
+     display: none;
      margin-top: 20px;
      padding: 15px;
      background: #f8f9fa;
@@ -227,6 +231,7 @@
    }
    .admin-controls {
      display: flex;
+     flex-wrap: wrap;
      gap: 10px;
      margin-bottom: 15px;
    }
@@ -234,6 +239,7 @@
      padding: 8px;
      border-radius: 5px;
      border: 1px solid #ddd;
+     min-width: 200px;
    }
    .admin-controls button {
      padding: 8px 15px;
@@ -245,6 +251,37 @@
    }
    .admin-controls button:hover {
      background: #219653;
+   }
+   .logout-btn {
+     background: #e74c3c !important;
+     margin-top: 10px;
+   }
+   .logout-btn:hover {
+     background: #c0392b !important;
+   }
+   .login-panel {
+     text-align: center;
+     margin-top: 20px;
+   }
+   #loginForm {
+     display: flex;
+     flex-direction: column;
+     gap: 10px;
+     max-width: 300px;
+     margin: 0 auto;
+   }
+   #loginForm input {
+     padding: 10px;
+     border-radius: 5px;
+     border: 1px solid #ddd;
+   }
+   #loginForm button {
+     padding: 10px;
+     background: #3498db;
+     color: white;
+     border: none;
+     border-radius: 5px;
+     cursor: pointer;
    }
  </style>
 </head>
@@ -261,7 +298,7 @@
      <button onclick="filterCategory('disposable')">Одноразки</button>
      <button onclick="filterCategory('vaporizer')">Испарители</button>
      <button onclick="filterCategory('accessories')">Аксессуары</button>
-     <button onclick="filterCategory()">Все товары</button>
+     <button onclick="filterCategory()" class="active">Все товары</button>
    </div>
    <div class="products" id="product-list">
      <!-- JS добавит товары сюда -->
@@ -287,8 +324,17 @@
    <button id="confirmOrder" onclick="submitOrder()">Подтвердить заказ</button>
  </div>
 
- <!-- Админ-панель (можно скрыть в production) -->
- <div class="admin-panel" id="adminPanel">
+ <!-- Панель входа -->
+ <div class="login-panel" id="loginPanel">
+   <h3>Вход в админ-панель</h3>
+   <form id="loginForm">
+     <input type="password" id="adminPassword" placeholder="Пароль" required>
+     <button type="button" onclick="checkAdminAccess()">Войти</button>
+   </form>
+ </div>
+
+ <!-- Админ-панель -->
+ <div id="adminPanel">
    <h2>Админ-панель</h2>
    <div class="admin-controls">
      <select id="adminProductSelect">
@@ -297,9 +343,12 @@
      <select id="adminFlavorSelect" style="display: none;">
        <option value="">Выберите вкус</option>
      </select>
-     <input type="number" id="adminQty" placeholder="Количество" min="1" value="1">
+     <input type="number" id="adminQty" placeholder="Количество" min="0" value="1">
      <button onclick="updateStock()">Обновить остатки</button>
+     <button onclick="addNewFlavor()" id="addFlavorBtn" style="display: none;">Добавить вкус</button>
+     <input type="text" id="newFlavorName" placeholder="Название вкуса" style="display: none;">
    </div>
+   <button class="logout-btn" onclick="logoutAdmin()">Выйти</button>
  </div>
 
  <footer>
@@ -313,6 +362,9 @@
  </footer>
 
  <script>
+   // Пароль для админ-панели (измените на свой)
+   const ADMIN_PASSWORD = "tlpadmin123";
+   
    // Загрузка остатков из localStorage
    function loadStock() {
      const savedStock = localStorage.getItem('tlpShopStock');
@@ -333,6 +385,8 @@
    // Сохранение остатков в localStorage
    function saveStock(stock) {
      localStorage.setItem('tlpShopStock', JSON.stringify(stock));
+     // Обновляем данные в products
+     updateProductsFromStock();
      // Триггерим событие для обновления интерфейса
      document.dispatchEvent(new Event('stockUpdated'));
    }
@@ -432,10 +486,42 @@
    ];
 
    let cart = [];
+   let currentFilter = null;
+
+   // Обновление данных products из serverStock
+   function updateProductsFromStock() {
+     for (const product of products) {
+       if (product.flavors) {
+         product.flavors = serverStock[product.id];
+       } else if (serverStock[product.id] !== undefined && typeof serverStock[product.id] === 'number') {
+         product.stock = serverStock[product.id];
+       }
+     }
+   }
+
+   // Проверка доступа к админ-панели
+   function checkAdminAccess() {
+     const password = document.getElementById('adminPassword').value;
+     if (password === ADMIN_PASSWORD) {
+       localStorage.setItem('adminAccess', 'true');
+       document.getElementById('loginPanel').style.display = 'none';
+       document.getElementById('adminPanel').style.display = 'block';
+     } else {
+       alert("Неверный пароль!");
+     }
+   }
+
+   // Выход из админ-панели
+   function logoutAdmin() {
+     localStorage.removeItem('adminAccess');
+     location.reload();
+   }
 
    // Инициализация админ-панели
    function initAdminPanel() {
      const productSelect = document.getElementById('adminProductSelect');
+     productSelect.innerHTML = '<option value="">Выберите товар</option>';
+     
      products.forEach(product => {
        const option = document.createElement('option');
        option.value = product.id;
@@ -446,25 +532,67 @@
      productSelect.addEventListener('change', function() {
        const productId = this.value;
        const flavorSelect = document.getElementById('adminFlavorSelect');
+       const addFlavorBtn = document.getElementById('addFlavorBtn');
+       const newFlavorName = document.getElementById('newFlavorName');
+       
        flavorSelect.innerHTML = '<option value="">Выберите вкус</option>';
        
        if (productId) {
          const product = products.find(p => p.id == productId);
          if (product.flavors) {
            flavorSelect.style.display = 'block';
+           addFlavorBtn.style.display = 'block';
+           newFlavorName.style.display = 'block';
+           
            Object.keys(product.flavors).forEach(flavor => {
              const option = document.createElement('option');
              option.value = flavor;
-             option.textContent = flavor;
+             option.textContent = `${flavor} (${product.flavors[flavor]} шт.)`;
              flavorSelect.appendChild(option);
            });
          } else {
            flavorSelect.style.display = 'none';
+           addFlavorBtn.style.display = 'none';
+           newFlavorName.style.display = 'none';
          }
        } else {
          flavorSelect.style.display = 'none';
+         addFlavorBtn.style.display = 'none';
+         newFlavorName.style.display = 'none';
        }
      });
+   }
+
+   // Добавление нового вкуса
+   function addNewFlavor() {
+     const productId = document.getElementById('adminProductSelect').value;
+     const flavorName = document.getElementById('newFlavorName').value.trim();
+     
+     if (!productId) {
+       alert("Выберите товар");
+       return;
+     }
+     
+     if (!flavorName) {
+       alert("Введите название вкуса");
+       return;
+     }
+     
+     const product = products.find(p => p.id == productId);
+     
+     if (product.flavors[flavorName] !== undefined) {
+       alert("Этот вкус уже существует");
+       return;
+     }
+     
+     // Добавляем новый вкус с 0 количеством
+     product.flavors[flavorName] = 0;
+     serverStock[productId][flavorName] = 0;
+     
+     // Сохраняем и обновляем интерфейс
+     saveStock(serverStock);
+     document.getElementById('newFlavorName').value = '';
+     alert(`Вкус "${flavorName}" добавлен! Установите количество и нажмите "Обновить остатки"`);
    }
 
    // Обновление остатков через админ-панель
@@ -499,13 +627,16 @@
    }
 
    function renderProducts(filter = null) {
+     currentFilter = filter;
      const list = document.getElementById('product-list');
      list.innerHTML = '';
      const filtered = filter ? products.filter(p => p.category === filter) : products;
+     
      if (filtered.length === 0) {
        list.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Товары отсутствуют</p>';
        return;
      }
+     
      for (const product of filtered) {
        const card = document.createElement('div');
        card.className = 'product-card';
@@ -634,7 +765,13 @@
      updateCartDisplay();
    }
 
-   function filterCategory(cat) { renderProducts(cat); }
+   function filterCategory(cat) {
+     document.querySelectorAll('.category-tabs button').forEach(btn => {
+       btn.classList.remove('active');
+     });
+     event.target.classList.add('active');
+     renderProducts(cat);
+   }
 
    function increaseQty(id) {
      const qtySpan = document.getElementById(`qty-${id}`);
@@ -717,14 +854,12 @@
      let address = '';
 
      if (deliveryPrice !== 0) {
-       // Если не самовывоз, проверяем адрес
        address = document.getElementById('address').value.trim();
        if (!address) {
          alert("Укажите адрес доставки");
          return;
        }
      } else {
-       // Если самовывоз
        address = "Самовывоз";
      }
 
@@ -821,39 +956,31 @@
      }
 
      // Обновляем интерфейс после заказа
-     renderProducts();
+     renderProducts(currentFilter);
      updateCartDisplay();
    }
 
    // Обновление интерфейса при изменении остатков
    function handleStockUpdate() {
-     // Обновляем данные в products
-     for (const product of products) {
-       if (product.flavors) {
-         product.flavors = serverStock[product.id];
-       } else if (serverStock[product.id] !== undefined && typeof serverStock[product.id] === 'number') {
-         product.stock = serverStock[product.id];
-       }
-     }
-     
-     // Перерисовываем товары
-     const currentFilter = document.querySelector('.category-tabs button[style*="background: #2980b9"]')?.getAttribute('onclick')?.replace("filterCategory('", "").replace("')", "") || null;
      renderProducts(currentFilter);
-     
-     // Очищаем корзину
-     document.querySelectorAll('[id^="selected-flavors-"]').forEach(el => el.innerHTML = '');
-     document.querySelectorAll('[id^="qty-"]').forEach(el => el.textContent = '0');
      updateCartDisplay();
    }
 
    // Инициализация при загрузке
    document.addEventListener('DOMContentLoaded', () => {
+     // Проверяем доступ к админ-панели
+     if (localStorage.getItem('adminAccess') === 'true') {
+       document.getElementById('loginPanel').style.display = 'none';
+       document.getElementById('adminPanel').style.display = 'block';
+     } else {
+       document.getElementById('adminPanel').style.display = 'none';
+     }
+     
      renderProducts();
      initAdminPanel();
      
      document.getElementById("delivery").addEventListener("change", function() {
        updateCartDisplay();
-       // Скрываем/показываем поле адреса в зависимости от выбора доставки
        const addressField = document.getElementById("address");
        if (this.value === "0") {
          addressField.style.display = "none";
@@ -864,11 +991,6 @@
      
      // Слушаем события обновления остатков
      document.addEventListener('stockUpdated', handleStockUpdate);
-     
-     // Скрываем админ-панель для обычных пользователей (можно удалить в production)
-     if (!window.location.href.includes('admin')) {
-       document.getElementById('adminPanel').style.display = 'none';
-     }
    });
  </script>
 </body>
