@@ -6,6 +6,7 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>TLP | SHOP</title>
  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+ <script src="https://telegram.org/js/telegram-web-app.js"></script>
  <style>
    * { margin: 0; padding: 0; box-sizing: border-box; }
    body {
@@ -305,6 +306,15 @@
      background: #f8f9fa;
      border-radius: 5px;
    }
+   .refresh-btn {
+     background: #3498db;
+     color: white;
+     border: none;
+     padding: 8px 15px;
+     border-radius: 5px;
+     cursor: pointer;
+     margin-top: 10px;
+   }
  </style>
 </head>
 <body>
@@ -375,6 +385,7 @@
      <h3>Список вкусов:</h3>
      <div id="flavorsListContainer"></div>
    </div>
+   <button class="refresh-btn" onclick="forceRefresh()">Обновить данные</button>
    <button class="logout-btn" onclick="logoutAdmin()">Выйти</button>
  </div>
 
@@ -389,32 +400,53 @@
  </footer>
 
  <script>
-   // Пароль для админ-панели (измените на свой)
+   // Пароль для админ-панели
    const ADMIN_PASSWORD = "tlpadmin123";
+   const WEBAPP_VERSION = "2.5";
    
+   // Инициализация Telegram WebApp
+   const tg = window.Telegram?.WebApp;
+   if (tg) {
+     tg.expand();
+     tg.enableClosingConfirmation();
+     
+     // Отправляем версию при открытии
+     tg.sendData(JSON.stringify({
+       type: "webapp_init",
+       version: WEBAPP_VERSION
+     }));
+   }
+
+   // Проверяем версию и очищаем кэш при необходимости
+   if (localStorage.getItem('webappVersion') !== WEBAPP_VERSION) {
+     localStorage.clear();
+     localStorage.setItem('webappVersion', WEBAPP_VERSION);
+     if (tg) {
+       tg.showAlert("Данные магазина обновлены. Пожалуйста, перезагрузите страницу.");
+     }
+   }
+
    // Загрузка остатков из localStorage
    function loadStock() {
      const savedStock = localStorage.getItem('tlpShopStock');
      return savedStock ? JSON.parse(savedStock) : {
-       "1": {"Еживика черника малина": 1, "Мята": 1, "Сакура виноград": 1, "Тройная ягода": 1, "Черника малина": 1, "Клюква виноград": 1, "Энергетик черная смородина": 1, "Арбуз": 1, "Клубника киви": 1, "Капучино": 1, "Черника малина ментол": 1}, 
-       "2": {"Лайм": 1, "Киви маракуйя гуава": 1, "Ледяной арбуз": 1, "Гранатовый сок": 1},
+       "1": {"Еживика черника малина": 5, "Мята": 5, "Сакура виноград": 5},
+       "2": {"Лайм": 5, "Киви маракуйя гуава": 5},
        "3": {},
-       "4": {"Подик": 1},
-       "5": {"Экзотические фрукты": 1},
-       "6": {"Испарик": 1},
-       "7": {"0.6": 1 , "0.8": 1},
-       "8": {"АКБ": 1},
-       "9": {"Черная вишня": 1, "Киви гуава маракуйя": 1, "Персик бабл гам": 1, "Банан кокос": 1, "Манго грейпфрут": 1, "Земляничный мохито": 1, "Северные ягоды": 1, "Грейпфрутовый швепс": 1, "Гранат смородина": 1, "Фруктовые пластинки": 1},
-       "10": {"Апельсиновая газировка": 1, "Брусничный морс": 1, "Ежевичный лимонад": 1, "Пина колада с грушей": 1, "Освежающий лимонад": 1, "Малиновый пунш": 1, "Морс черника виноград": 1, "Яблочный лимонад": 1}
+       "4": {"Подик": 5},
+       "5": {"Экзотические фрукты": 5},
+       "6": {"Испарик": 5},
+       "7": {"0.6": 5, "0.8": 5},
+       "8": {"АКБ": 5},
+       "9": {"Черная вишня": 5, "Киви гуава маракуйя": 5},
+       "10": {"Апельсиновая газировка": 5, "Брусничный морс": 5}
      };
    }
 
    // Сохранение остатков в localStorage
    function saveStock(stock) {
      localStorage.setItem('tlpShopStock', JSON.stringify(stock));
-     // Обновляем данные в products
      updateProductsFromStock();
-     // Триггерим событие для обновления интерфейса
      document.dispatchEvent(new Event('stockUpdated'));
    }
 
@@ -427,7 +459,7 @@
        category: "disposable", 
        price: 1500, 
        image: 'dis/1.jpg', 
-       description: "20 000 затяжек? Ну, если не жаришь её как последнюю хуйню в твоей жалкой жизни. Аккум 850mAh — хватит, чтобы вырубить даже слона. Выбирай вкус и наслаждайся, пока не сдохнешь от никотинового кайфа.", 
+       description: "20 000 затяжек", 
        flavors: serverStock["1"] 
      },
      { 
@@ -436,7 +468,7 @@
        category: "disposable", 
        price: 1700, 
        image: 'dis/2.jpg', 
-       description: "16 000 тяг, но ты всё равно сожрёшь её за два дня, слабак. Профессиональная серия — потому что для тех, у кого яйца есть. Вкусы? Да хоть табак, хоть ваниль — главное, чтобы мозги вырубило.", 
+       description: "16 000 затяжек", 
        flavors: serverStock["2"] 
      },
      { 
@@ -444,7 +476,7 @@
        name: "WAKA 69 мг", 
        price: 550, 
        image: 'ju/1.jpg', 
-       description: "69 мг никотина — не для школьников, а для дегенератов, которые хотят отъехать с первой затяжки. Лёд, фрукты или пиздатый микс — выбирай и готовься к тому, что лёгкие скажут пока.", 
+       description: "69 мг никотина", 
        flavors: serverStock["3"] 
      },
      { 
@@ -453,7 +485,7 @@
        category: "pod", 
        price: 3700, 
        image: 'pod/1.jpg', 
-       description: "Не хуйня за 500 рублей, а серьёзный девайс для тех, кто не сосёт слабые испарители. Мощность, контроль и долгий ресурс — если, конечно, ты не разъебешь его за неделю.", 
+       description: "Профессиональный под", 
        flavors: serverStock["4"] 
      },
      { 
@@ -462,7 +494,7 @@
        category: "juice", 
        price: 500, 
        image: 'ju/2.jpg', 
-       description: "70 мг никотина — это не шутки, уёбок. Один пых — и ты уже в космосе. Для тех, кому обычные жижи кажутся водой.", 
+       description: "70 мг никотина", 
        flavors: serverStock["5"] 
      },
      { 
@@ -471,7 +503,7 @@
        category: "vaporizer", 
        price: 350, 
        image: 'vap/1.jpg', 
-       description: "Освежает так, будто тебя ебнули мятным ураганом в глотку. Лёд, фрукты или что-то посерьёзнее — выбирай и не ной, если лёгкие взвоют.", 
+       description: "Профессиональный испаритель", 
        flavors: serverStock["6"] 
      },
      { 
@@ -480,7 +512,7 @@
        category: "vaporizer", 
        price: 450, 
        image: 'vap/2.jpg', 
-       description: "Вставил, затянулся — и понеслась. Никакого геморроя с самозамесом, просто чистая никотиновая бомба.", 
+       description: "Картридж для испарителя", 
        flavors: serverStock["7"] 
      },
      { 
@@ -489,7 +521,7 @@
        category: "accessories", 
        price: 600, 
        image: 'acc/1.jpg', 
-       description: "Чтоб твой девайс не сдох нахуй посреди дня. Мощная, удобная, но всё равно ты её потеряешь через месяц.", 
+       description: "Аккумулятор", 
        flavors: serverStock["8"] 
      },
      { 
@@ -498,7 +530,7 @@
        category: "juice", 
        price: 550, 
        image: 'ju/3.jpg', 
-       description: "70 мг никотина и вкус, от которого реально словишь bad trip. Если хочешь ощутить, как твои мозги плавятся — это твой выбор.", 
+       description: "70 мг никотина", 
        flavors: serverStock["9"] 
      },
      {
@@ -507,7 +539,7 @@
       category: "juice",
       price: 550,
       image: 'ju/4.jpg',
-      description: "Старая школа с пиздатым ударом. 70 мг — как в те времена, когда вейперы ещё не были хипстерами.",
+      description: "70 мг никотина",
       flavors: serverStock["10"]
      }
    ];
@@ -544,6 +576,13 @@
      location.reload();
    }
 
+   // Принудительное обновление данных
+   function forceRefresh() {
+     localStorage.removeItem('tlpShopStock');
+     localStorage.setItem('forceRefresh', 'true');
+     location.reload();
+   }
+
    // Инициализация админ-панели
    function initAdminPanel() {
      const productSelect = document.getElementById('adminProductSelect');
@@ -575,7 +614,6 @@
            newFlavorName.style.display = 'block';
            flavorsList.style.display = 'block';
            
-           // Обновляем список вкусов
            updateFlavorsList(productId);
            
            Object.keys(product.flavors).forEach(flavor => {
@@ -642,11 +680,9 @@
        return;
      }
      
-     // Добавляем новый вкус с 0 количеством
      product.flavors[flavorName] = 0;
      serverStock[productId][flavorName] = 0;
      
-     // Сохраняем и обновляем интерфейс
      saveStock(serverStock);
      document.getElementById('newFlavorName').value = '';
      alert(`Вкус "${flavorName}" добавлен! Установите количество и нажмите "Обновить остатки"`);
@@ -677,11 +713,9 @@
        delete product.flavors[flavor];
        delete serverStock[productId][flavor];
        
-       // Сохраняем и обновляем интерфейс
        saveStock(serverStock);
        updateFlavorsList(productId);
        
-       // Обновляем select с вкусами
        const flavorSelect = document.getElementById('adminFlavorSelect');
        flavorSelect.innerHTML = '<option value="">Выберите вкус</option>';
        Object.keys(product.flavors).forEach(f => {
@@ -791,7 +825,6 @@
      const product = products.find(p => p.id === productId);
      const container = document.getElementById(`selected-flavors-${productId}`);
      
-     // Проверяем, есть ли уже такой вкус в корзине
      const existingFlavor = document.getElementById(`flavor-item-${productId}-${selectedFlavor}`);
      
      if (existingFlavor) {
@@ -1029,13 +1062,15 @@
      const total = subtotal + deliveryPrice;
 
      const orderData = {
+       type: "new_order",
        items: cartItems,
        address: address,
        district: district,
        deliveryPrice: deliveryPrice,
        subtotal: subtotal,
        total: total,
-       phone: window.Telegram?.WebApp?.initDataUnsafe?.user?.phone_number || "не указан"
+       phone: tg?.initDataUnsafe?.user?.phone_number || "не указан",
+       webapp_version: WEBAPP_VERSION
      };
 
      // Сохраняем обновленные остатки
@@ -1044,8 +1079,12 @@
      // Отправка данных в Telegram бот
      if (window.Telegram && window.Telegram.WebApp) {
        try {
-         window.Telegram.WebApp.sendData(JSON.stringify(orderData));
-         window.Telegram.WebApp.close();
+         tg.sendData(JSON.stringify(orderData));
+         
+         // Закрываем WebApp с небольшой задержкой
+         setTimeout(() => {
+           tg.close();
+         }, 300);
        } catch (e) {
          console.error("Ошибка отправки данных в Telegram:", e);
          alert("Заказ оформлен! Менеджер свяжется с вами.");
@@ -1091,8 +1130,14 @@
      
      // Слушаем события обновления остатков
      document.addEventListener('stockUpdated', handleStockUpdate);
+     
+     // Принудительное обновление при изменении версии
+     if (localStorage.getItem('forceRefresh') === 'true') {
+       localStorage.removeItem('forceRefresh');
+       location.reload();
+     }
    });
  </script>
 </body>
-</html>
+</html> 
 ```
