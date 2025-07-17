@@ -283,6 +283,28 @@
      border-radius: 5px;
      cursor: pointer;
    }
+   .remove-flavor-admin {
+     background: #e74c3c;
+     color: white;
+     border: none;
+     padding: 5px 10px;
+     border-radius: 5px;
+     cursor: pointer;
+     margin-left: 10px;
+     font-size: 0.8rem;
+   }
+   .remove-flavor-admin:hover {
+     background: #c0392b;
+   }
+   .flavor-list-item {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     margin: 5px 0;
+     padding: 5px;
+     background: #f8f9fa;
+     border-radius: 5px;
+   }
  </style>
 </head>
 <body>
@@ -347,6 +369,11 @@
      <button onclick="updateStock()">Обновить остатки</button>
      <button onclick="addNewFlavor()" id="addFlavorBtn" style="display: none;">Добавить вкус</button>
      <input type="text" id="newFlavorName" placeholder="Название вкуса" style="display: none;">
+     <button onclick="removeSelectedFlavor()" id="removeFlavorBtn" style="display: none; background: #e74c3c;">Удалить вкус</button>
+   </div>
+   <div id="flavorsList" style="margin-top: 15px; display: none;">
+     <h3>Список вкусов:</h3>
+     <div id="flavorsListContainer"></div>
    </div>
    <button class="logout-btn" onclick="logoutAdmin()">Выйти</button>
  </div>
@@ -533,7 +560,9 @@
        const productId = this.value;
        const flavorSelect = document.getElementById('adminFlavorSelect');
        const addFlavorBtn = document.getElementById('addFlavorBtn');
+       const removeFlavorBtn = document.getElementById('removeFlavorBtn');
        const newFlavorName = document.getElementById('newFlavorName');
+       const flavorsList = document.getElementById('flavorsList');
        
        flavorSelect.innerHTML = '<option value="">Выберите вкус</option>';
        
@@ -542,7 +571,12 @@
          if (product.flavors) {
            flavorSelect.style.display = 'block';
            addFlavorBtn.style.display = 'block';
+           removeFlavorBtn.style.display = 'block';
            newFlavorName.style.display = 'block';
+           flavorsList.style.display = 'block';
+           
+           // Обновляем список вкусов
+           updateFlavorsList(productId);
            
            Object.keys(product.flavors).forEach(flavor => {
              const option = document.createElement('option');
@@ -553,13 +587,36 @@
          } else {
            flavorSelect.style.display = 'none';
            addFlavorBtn.style.display = 'none';
+           removeFlavorBtn.style.display = 'none';
            newFlavorName.style.display = 'none';
+           flavorsList.style.display = 'none';
          }
        } else {
          flavorSelect.style.display = 'none';
          addFlavorBtn.style.display = 'none';
+         removeFlavorBtn.style.display = 'none';
          newFlavorName.style.display = 'none';
+         flavorsList.style.display = 'none';
        }
+     });
+   }
+
+   // Обновление списка вкусов для админа
+   function updateFlavorsList(productId) {
+     const container = document.getElementById('flavorsListContainer');
+     container.innerHTML = '';
+     
+     const product = products.find(p => p.id == productId);
+     if (!product || !product.flavors) return;
+     
+     Object.entries(product.flavors).forEach(([flavor, qty]) => {
+       const item = document.createElement('div');
+       item.className = 'flavor-list-item';
+       item.innerHTML = `
+         <span>${flavor}: ${qty} шт.</span>
+         <button class="remove-flavor-admin" onclick="adminRemoveFlavor(${productId}, '${flavor}')">Удалить</button>
+       `;
+       container.appendChild(item);
      });
    }
 
@@ -593,6 +650,49 @@
      saveStock(serverStock);
      document.getElementById('newFlavorName').value = '';
      alert(`Вкус "${flavorName}" добавлен! Установите количество и нажмите "Обновить остатки"`);
+   }
+
+   // Удаление выбранного вкуса
+   function removeSelectedFlavor() {
+     const productId = document.getElementById('adminProductSelect').value;
+     const flavor = document.getElementById('adminFlavorSelect').value;
+     
+     if (!productId || !flavor) {
+       alert("Выберите товар и вкус");
+       return;
+     }
+     
+     adminRemoveFlavor(productId, flavor);
+   }
+
+   // Удаление вкуса (админ)
+   function adminRemoveFlavor(productId, flavor) {
+     if (!confirm(`Удалить вкус "${flavor}"? Это действие нельзя отменить!`)) {
+       return;
+     }
+     
+     const product = products.find(p => p.id == productId);
+     
+     if (product && product.flavors && product.flavors[flavor] !== undefined) {
+       delete product.flavors[flavor];
+       delete serverStock[productId][flavor];
+       
+       // Сохраняем и обновляем интерфейс
+       saveStock(serverStock);
+       updateFlavorsList(productId);
+       
+       // Обновляем select с вкусами
+       const flavorSelect = document.getElementById('adminFlavorSelect');
+       flavorSelect.innerHTML = '<option value="">Выберите вкус</option>';
+       Object.keys(product.flavors).forEach(f => {
+         const option = document.createElement('option');
+         option.value = f;
+         option.textContent = `${f} (${product.flavors[f]} шт.)`;
+         flavorSelect.appendChild(option);
+       });
+       
+       alert(`Вкус "${flavor}" удален!`);
+     }
    }
 
    // Обновление остатков через админ-панель
@@ -994,5 +1094,5 @@
    });
  </script>
 </body>
-</html> 
+</html>
 ```
