@@ -333,7 +333,7 @@
      <button onclick="filterCategory()" class="active">Все товары</button>
    </div>
    <div class="products" id="product-list">
-     <!-- JS добавит товары сюда -->
+     <!-- Товары будут добавлены через JavaScript -->
    </div>
  </div>
 
@@ -980,6 +980,53 @@
      `;
    }
 
+   function validateOrderData(orderData) {
+     if (!orderData.type || orderData.type !== "new_order") {
+       console.error("Неверный тип заказа");
+       return false;
+     }
+     
+     if (!Array.isArray(orderData.items) || orderData.items.length === 0) {
+       console.error("Нет товаров в заказе");
+       return false;
+     }
+     
+     if (!orderData.address || !orderData.district) {
+       console.error("Не указан адрес или район");
+       return false;
+     }
+     
+     if (isNaN(orderData.total) || orderData.total <= 0) {
+       console.error("Неверная сумма заказа");
+       return false;
+     }
+     
+     return true;
+   }
+
+   function updateStockAfterOrder(cartItems) {
+     for (const item of cartItems) {
+       const product = products.find(p => p.id === item.id);
+       if (!product) continue;
+       
+       if (product.flavors && item.flavor !== 'Стандарт') {
+         // Обновляем остатки для товаров с вкусами
+         if (product.flavors[item.flavor] !== undefined) {
+           product.flavors[item.flavor] -= item.qty;
+           if (product.flavors[item.flavor] < 0) product.flavors[item.flavor] = 0;
+           serverStock[product.id][item.flavor] = product.flavors[item.flavor];
+         }
+       } else if (product.stock !== undefined) {
+         // Обновляем остатки для товаров без вкусов
+         product.stock -= item.qty;
+         if (product.stock < 0) product.stock = 0;
+         serverStock[product.id] = product.stock;
+       }
+     }
+     
+     saveStock(serverStock);
+   }
+
    function submitOrder() {
      const deliverySelect = document.getElementById("delivery");
      const district = deliverySelect.selectedOptions[0]?.text;
@@ -1015,13 +1062,6 @@
              flavor: 'Стандарт',
              price: product.price
            });
-
-           // Обновляем остатки
-           if (product.stock !== undefined) {
-             product.stock -= qty;
-             if (product.stock < 0) product.stock = 0;
-             serverStock[product.id] = product.stock;
-           }
          }
        }
      }
@@ -1043,11 +1083,6 @@
                flavor: flavorName,
                price: product.price
              });
-
-             // Обновляем остатки
-             product.flavors[flavorName] -= qty;
-             if (product.flavors[flavorName] < 0) product.flavors[flavorName] = 0;
-             serverStock[product.id][flavorName] = product.flavors[flavorName];
            });
          }
        }
@@ -1061,6 +1096,7 @@
      const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
      const total = subtotal + deliveryPrice;
 
+     // Формируем данные заказа с проверкой всех полей
      const orderData = {
        type: "new_order",
        items: cartItems,
@@ -1073,13 +1109,19 @@
        webapp_version: WEBAPP_VERSION
      };
 
-     // Сохраняем обновленные остатки
-     saveStock(serverStock);
+     // Проверяем данные перед отправкой
+     if (!validateOrderData(orderData)) {
+       alert("Ошибка в данных заказа. Пожалуйста, попробуйте еще раз.");
+       return;
+     }
 
      // Отправка данных в Telegram бот
      if (window.Telegram && window.Telegram.WebApp) {
        try {
          tg.sendData(JSON.stringify(orderData));
+         
+         // Обновляем остатки только после успешной отправки
+         updateStockAfterOrder(cartItems);
          
          // Закрываем WebApp с небольшой задержкой
          setTimeout(() => {
