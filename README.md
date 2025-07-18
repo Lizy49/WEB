@@ -402,56 +402,16 @@
  <script>
    // Пароль для админ-панели
    const ADMIN_PASSWORD = "tlpadmin123";
-   const WEBAPP_VERSION = "2.5";
+   const WEBAPP_VERSION = "2.6";
    
    // Инициализация Telegram WebApp
    const tg = window.Telegram?.WebApp;
    if (tg) {
      tg.expand();
      tg.enableClosingConfirmation();
-     
-     // Отправляем версию при открытии
-     tg.sendData(JSON.stringify({
-       type: "webapp_init",
-       version: WEBAPP_VERSION
-     }));
    }
 
-   // Проверяем версию и очищаем кэш при необходимости
-   if (localStorage.getItem('webappVersion') !== WEBAPP_VERSION) {
-     localStorage.clear();
-     localStorage.setItem('webappVersion', WEBAPP_VERSION);
-     if (tg) {
-       tg.showAlert("Данные магазина обновлены. Пожалуйста, перезагрузите страницу.");
-     }
-   }
-
-   // Загрузка остатков из localStorage
-   function loadStock() {
-     const savedStock = localStorage.getItem('tlpShopStock');
-     return savedStock ? JSON.parse(savedStock) : {
-       "1": {"Еживика черника малина": 5, "Мята": 5, "Сакура виноград": 5},
-       "2": {"Лайм": 5, "Киви маракуйя гуава": 5},
-       "3": {},
-       "4": {"Подик": 5},
-       "5": {"Экзотические фрукты": 5},
-       "6": {"Испарик": 5},
-       "7": {"0.6": 5, "0.8": 5},
-       "8": {"АКБ": 5},
-       "9": {"Черная вишня": 5, "Киви гуава маракуйя": 5},
-       "10": {"Апельсиновая газировка": 5, "Брусничный морс": 5}
-     };
-   }
-
-   // Сохранение остатков в localStorage
-   function saveStock(stock) {
-     localStorage.setItem('tlpShopStock', JSON.stringify(stock));
-     updateProductsFromStock();
-     document.dispatchEvent(new Event('stockUpdated'));
-   }
-
-   let serverStock = loadStock();
-
+   // Данные товаров с оригинальными описаниями и количеством
    const products = [
      { 
        id: 1, 
@@ -459,8 +419,8 @@
        category: "disposable", 
        price: 1500, 
        image: 'dis/1.jpg', 
-       description: "20 000 затяжек", 
-       flavors: serverStock["1"] 
+       description: "20 000 затяжек, компактный корпус, долгий срок службы", 
+       flavors: {"Еживика черника малина": 5, "Мята": 5, "Сакура виноград": 5} 
      },
      { 
        id: 2, 
@@ -468,16 +428,17 @@
        category: "disposable", 
        price: 1700, 
        image: 'dis/2.jpg', 
-       description: "16 000 затяжек", 
-       flavors: serverStock["2"] 
+       description: "16 000 затяжек, эргономичный дизайн, насыщенный вкус", 
+       flavors: {"Лайм": 5, "Киви маракуйя гуава": 5} 
      },
      { 
        id: 3, 
        name: "WAKA 69 мг", 
+       category: "juice",
        price: 550, 
        image: 'ju/1.jpg', 
-       description: "69 мг никотина", 
-       flavors: serverStock["3"] 
+       description: "69 мг никотина, насыщенный вкус, плавное попадание", 
+       flavors: {} 
      },
      { 
        id: 4, 
@@ -485,8 +446,8 @@
        category: "pod", 
        price: 3700, 
        image: 'pod/1.jpg', 
-       description: "Профессиональный под", 
-       flavors: serverStock["4"] 
+       description: "Профессиональный под, регулируемая мощность, долгая работа от аккумулятора", 
+       flavors: {"Подик": 5} 
      },
      { 
        id: 5, 
@@ -494,8 +455,8 @@
        category: "juice", 
        price: 500, 
        image: 'ju/2.jpg', 
-       description: "70 мг никотина", 
-       flavors: serverStock["5"] 
+       description: "70 мг никотина, яркий вкус, плавное попадание", 
+       flavors: {"Экзотические фрукты": 5} 
      },
      { 
        id: 6, 
@@ -503,8 +464,8 @@
        category: "vaporizer", 
        price: 350, 
        image: 'vap/1.jpg', 
-       description: "Профессиональный испаритель", 
-       flavors: serverStock["6"] 
+       description: "Профессиональный испаритель, долгий срок службы, качественные материалы", 
+       flavors: {"Испарик": 5} 
      },
      { 
        id: 7, 
@@ -512,8 +473,8 @@
        category: "vaporizer", 
        price: 450, 
        image: 'vap/2.jpg', 
-       description: "Картридж для испарителя", 
-       flavors: serverStock["7"] 
+       description: "Картридж для испарителя, совместимость с xros, долгий срок службы", 
+       flavors: {"0.6": 5, "0.8": 5} 
      },
      { 
        id: 8, 
@@ -521,8 +482,8 @@
        category: "accessories", 
        price: 600, 
        image: 'acc/1.jpg', 
-       description: "Аккумулятор", 
-       flavors: serverStock["8"] 
+       description: "Аккумулятор, долгая работа, быстрая зарядка", 
+       flavors: {"АКБ": 5} 
      },
      { 
        id: 9, 
@@ -530,236 +491,23 @@
        category: "juice", 
        price: 550, 
        image: 'ju/3.jpg', 
-       description: "70 мг никотина", 
-       flavors: serverStock["9"] 
+       description: "70 мг никотина, уникальный вкус, плавное попадание", 
+       flavors: {"Черная вишня": 5, "Киви гуава маракуйя": 5} 
      },
      {
-      id: 10,
-      name: "Podonki Vintage 70мг",
-      category: "juice",
-      price: 550,
-      image: 'ju/4.jpg',
-      description: "70 мг никотина",
-      flavors: serverStock["10"]
+       id: 10,
+       name: "Podonki Vintage 70мг",
+       category: "juice",
+       price: 550,
+       image: 'ju/4.jpg',
+       description: "70 мг никотина, классические вкусы, насыщенный аромат",
+       flavors: {"Апельсиновая газировка": 5, "Брусничный морс": 5}
      }
    ];
 
-   let cart = [];
    let currentFilter = null;
 
-   // Обновление данных products из serverStock
-   function updateProductsFromStock() {
-     for (const product of products) {
-       if (product.flavors) {
-         product.flavors = serverStock[product.id];
-       } else if (serverStock[product.id] !== undefined && typeof serverStock[product.id] === 'number') {
-         product.stock = serverStock[product.id];
-       }
-     }
-   }
-
-   // Проверка доступа к админ-панели
-   function checkAdminAccess() {
-     const password = document.getElementById('adminPassword').value;
-     if (password === ADMIN_PASSWORD) {
-       localStorage.setItem('adminAccess', 'true');
-       document.getElementById('loginPanel').style.display = 'none';
-       document.getElementById('adminPanel').style.display = 'block';
-     } else {
-       alert("Неверный пароль!");
-     }
-   }
-
-   // Выход из админ-панели
-   function logoutAdmin() {
-     localStorage.removeItem('adminAccess');
-     location.reload();
-   }
-
-   // Принудительное обновление данных
-   function forceRefresh() {
-     localStorage.removeItem('tlpShopStock');
-     localStorage.setItem('forceRefresh', 'true');
-     location.reload();
-   }
-
-   // Инициализация админ-панели
-   function initAdminPanel() {
-     const productSelect = document.getElementById('adminProductSelect');
-     productSelect.innerHTML = '<option value="">Выберите товар</option>';
-     
-     products.forEach(product => {
-       const option = document.createElement('option');
-       option.value = product.id;
-       option.textContent = product.name;
-       productSelect.appendChild(option);
-     });
-
-     productSelect.addEventListener('change', function() {
-       const productId = this.value;
-       const flavorSelect = document.getElementById('adminFlavorSelect');
-       const addFlavorBtn = document.getElementById('addFlavorBtn');
-       const removeFlavorBtn = document.getElementById('removeFlavorBtn');
-       const newFlavorName = document.getElementById('newFlavorName');
-       const flavorsList = document.getElementById('flavorsList');
-       
-       flavorSelect.innerHTML = '<option value="">Выберите вкус</option>';
-       
-       if (productId) {
-         const product = products.find(p => p.id == productId);
-         if (product.flavors) {
-           flavorSelect.style.display = 'block';
-           addFlavorBtn.style.display = 'block';
-           removeFlavorBtn.style.display = 'block';
-           newFlavorName.style.display = 'block';
-           flavorsList.style.display = 'block';
-           
-           updateFlavorsList(productId);
-           
-           Object.keys(product.flavors).forEach(flavor => {
-             const option = document.createElement('option');
-             option.value = flavor;
-             option.textContent = `${flavor} (${product.flavors[flavor]} шт.)`;
-             flavorSelect.appendChild(option);
-           });
-         } else {
-           flavorSelect.style.display = 'none';
-           addFlavorBtn.style.display = 'none';
-           removeFlavorBtn.style.display = 'none';
-           newFlavorName.style.display = 'none';
-           flavorsList.style.display = 'none';
-         }
-       } else {
-         flavorSelect.style.display = 'none';
-         addFlavorBtn.style.display = 'none';
-         removeFlavorBtn.style.display = 'none';
-         newFlavorName.style.display = 'none';
-         flavorsList.style.display = 'none';
-       }
-     });
-   }
-
-   // Обновление списка вкусов для админа
-   function updateFlavorsList(productId) {
-     const container = document.getElementById('flavorsListContainer');
-     container.innerHTML = '';
-     
-     const product = products.find(p => p.id == productId);
-     if (!product || !product.flavors) return;
-     
-     Object.entries(product.flavors).forEach(([flavor, qty]) => {
-       const item = document.createElement('div');
-       item.className = 'flavor-list-item';
-       item.innerHTML = `
-         <span>${flavor}: ${qty} шт.</span>
-         <button class="remove-flavor-admin" onclick="adminRemoveFlavor(${productId}, '${flavor}')">Удалить</button>
-       `;
-       container.appendChild(item);
-     });
-   }
-
-   // Добавление нового вкуса
-   function addNewFlavor() {
-     const productId = document.getElementById('adminProductSelect').value;
-     const flavorName = document.getElementById('newFlavorName').value.trim();
-     
-     if (!productId) {
-       alert("Выберите товар");
-       return;
-     }
-     
-     if (!flavorName) {
-       alert("Введите название вкуса");
-       return;
-     }
-     
-     const product = products.find(p => p.id == productId);
-     
-     if (product.flavors[flavorName] !== undefined) {
-       alert("Этот вкус уже существует");
-       return;
-     }
-     
-     product.flavors[flavorName] = 0;
-     serverStock[productId][flavorName] = 0;
-     
-     saveStock(serverStock);
-     document.getElementById('newFlavorName').value = '';
-     alert(`Вкус "${flavorName}" добавлен! Установите количество и нажмите "Обновить остатки"`);
-   }
-
-   // Удаление выбранного вкуса
-   function removeSelectedFlavor() {
-     const productId = document.getElementById('adminProductSelect').value;
-     const flavor = document.getElementById('adminFlavorSelect').value;
-     
-     if (!productId || !flavor) {
-       alert("Выберите товар и вкус");
-       return;
-     }
-     
-     adminRemoveFlavor(productId, flavor);
-   }
-
-   // Удаление вкуса (админ)
-   function adminRemoveFlavor(productId, flavor) {
-     if (!confirm(`Удалить вкус "${flavor}"? Это действие нельзя отменить!`)) {
-       return;
-     }
-     
-     const product = products.find(p => p.id == productId);
-     
-     if (product && product.flavors && product.flavors[flavor] !== undefined) {
-       delete product.flavors[flavor];
-       delete serverStock[productId][flavor];
-       
-       saveStock(serverStock);
-       updateFlavorsList(productId);
-       
-       const flavorSelect = document.getElementById('adminFlavorSelect');
-       flavorSelect.innerHTML = '<option value="">Выберите вкус</option>';
-       Object.keys(product.flavors).forEach(f => {
-         const option = document.createElement('option');
-         option.value = f;
-         option.textContent = `${f} (${product.flavors[f]} шт.)`;
-         flavorSelect.appendChild(option);
-       });
-       
-       alert(`Вкус "${flavor}" удален!`);
-     }
-   }
-
-   // Обновление остатков через админ-панель
-   function updateStock() {
-     const productId = document.getElementById('adminProductSelect').value;
-     const flavorSelect = document.getElementById('adminFlavorSelect');
-     const flavor = flavorSelect.style.display === 'none' ? null : flavorSelect.value;
-     const qty = parseInt(document.getElementById('adminQty').value);
-
-     if (!productId) {
-       alert("Выберите товар");
-       return;
-     }
-
-     if (flavorSelect.style.display !== 'none' && !flavor) {
-       alert("Выберите вкус");
-       return;
-     }
-
-     const product = products.find(p => p.id == productId);
-     
-     if (flavor) {
-       product.flavors[flavor] = qty;
-       serverStock[productId][flavor] = qty;
-     } else {
-       product.stock = qty;
-       serverStock[productId] = qty;
-     }
-
-     saveStock(serverStock);
-     alert("Остатки обновлены!");
-   }
-
+   // Функция рендеринга товаров
    function renderProducts(filter = null) {
      currentFilter = filter;
      const list = document.getElementById('product-list');
@@ -790,7 +538,7 @@
          <h3>${product.name}</h3>
          <p>${product.description}</p>
          <p class="price">${product.price} ₽</p>
-         ${product.flavors ? `
+         ${product.flavors && Object.keys(product.flavors).length > 0 ? `
            <select class="flavor-select" id="flavor-${product.id}">
              <option value="">-- Выберите вкус --</option>
              ${flavorOptions}
@@ -813,6 +561,7 @@
      }
    }
 
+   // Функция добавления вкуса в корзину
    function addFlavorToCart(productId) {
      const flavorSelect = document.getElementById(`flavor-${productId}`);
      const selectedFlavor = flavorSelect.value;
@@ -858,6 +607,7 @@
      updateCartDisplay();
    }
 
+   // Функция удаления вкуса из корзины
    function removeFlavor(productId, flavor) {
      const item = document.getElementById(`flavor-item-${productId}-${flavor}`);
      if (item) {
@@ -866,6 +616,7 @@
      updateCartDisplay();
    }
 
+   // Функция увеличения количества вкуса
    function increaseFlavorQty(productId, flavor) {
      const item = document.getElementById(`flavor-item-${productId}-${flavor}`);
      if (item) {
@@ -883,6 +634,7 @@
      updateCartDisplay();
    }
 
+   // Функция уменьшения количества вкуса
    function decreaseFlavorQty(productId, flavor) {
      const item = document.getElementById(`flavor-item-${productId}-${flavor}`);
      if (item) {
@@ -898,6 +650,7 @@
      updateCartDisplay();
    }
 
+   // Функция фильтрации по категориям
    function filterCategory(cat) {
      document.querySelectorAll('.category-tabs button').forEach(btn => {
        btn.classList.remove('active');
@@ -906,6 +659,7 @@
      renderProducts(cat);
    }
 
+   // Функция увеличения количества товара
    function increaseQty(id) {
      const qtySpan = document.getElementById(`qty-${id}`);
      let currentQty = parseInt(qtySpan.innerText);
@@ -921,6 +675,7 @@
      updateCartDisplay();
    }
 
+   // Функция уменьшения количества товара
    function decreaseQty(id) {
      const qtySpan = document.getElementById(`qty-${id}`);
      let currentQty = parseInt(qtySpan.innerText);
@@ -931,6 +686,7 @@
      updateCartDisplay();
    }
 
+   // Функция обновления отображения корзины
    function updateCartDisplay() {
      const cartItems = document.getElementById("cart-items");
      cartItems.innerHTML = '';
@@ -938,7 +694,7 @@
 
      // Обрабатываем товары без вкусов
      for (const product of products) {
-       if (!product.flavors) {
+       if (!product.flavors || Object.keys(product.flavors).length === 0) {
          const qty = parseInt(document.getElementById(`qty-${product.id}`)?.innerText || 0);
          if (qty > 0) {
            const cost = product.price * qty;
@@ -952,7 +708,7 @@
 
      // Обрабатываем товары с вкусами
      for (const product of products) {
-       if (product.flavors) {
+       if (product.flavors && Object.keys(product.flavors).length > 0) {
          const container = document.getElementById(`selected-flavors-${product.id}`);
          if (container) {
            const flavorItems = container.querySelectorAll('.flavor-item');
@@ -980,53 +736,7 @@
      `;
    }
 
-   function validateOrderData(orderData) {
-     if (!orderData.type || orderData.type !== "new_order") {
-       console.error("Неверный тип заказа");
-       return false;
-     }
-     
-     if (!Array.isArray(orderData.items) || orderData.items.length === 0) {
-       console.error("Нет товаров в заказе");
-       return false;
-     }
-     
-     if (!orderData.address || !orderData.district) {
-       console.error("Не указан адрес или район");
-       return false;
-     }
-     
-     if (isNaN(orderData.total) || orderData.total <= 0) {
-       console.error("Неверная сумма заказа");
-       return false;
-     }
-     
-     return true;
-   }
-
-   function updateStockAfterOrder(cartItems) {
-     for (const item of cartItems) {
-       const product = products.find(p => p.id === item.id);
-       if (!product) continue;
-       
-       if (product.flavors && item.flavor !== 'Стандарт') {
-         // Обновляем остатки для товаров с вкусами
-         if (product.flavors[item.flavor] !== undefined) {
-           product.flavors[item.flavor] -= item.qty;
-           if (product.flavors[item.flavor] < 0) product.flavors[item.flavor] = 0;
-           serverStock[product.id][item.flavor] = product.flavors[item.flavor];
-         }
-       } else if (product.stock !== undefined) {
-         // Обновляем остатки для товаров без вкусов
-         product.stock -= item.qty;
-         if (product.stock < 0) product.stock = 0;
-         serverStock[product.id] = product.stock;
-       }
-     }
-     
-     saveStock(serverStock);
-   }
-
+   // Функция отправки заказа
    function submitOrder() {
      const deliverySelect = document.getElementById("delivery");
      const district = deliverySelect.selectedOptions[0]?.text;
@@ -1050,9 +760,9 @@
 
      const cartItems = [];
 
-     // Добавляем товары без вкусов
+     // Собираем товары без вкусов
      for (const product of products) {
-       if (!product.flavors) {
+       if (!product.flavors || Object.keys(product.flavors).length === 0) {
          const qty = parseInt(document.getElementById(`qty-${product.id}`)?.innerText || 0);
          if (qty > 0) {
            cartItems.push({
@@ -1060,15 +770,16 @@
              name: product.name,
              qty: qty,
              flavor: 'Стандарт',
-             price: product.price
+             price: product.price,
+             description: product.description
            });
          }
        }
      }
 
-     // Добавляем товары с вкусами
+     // Собираем товары с вкусами
      for (const product of products) {
-       if (product.flavors) {
+       if (product.flavors && Object.keys(product.flavors).length > 0) {
          const container = document.getElementById(`selected-flavors-${product.id}`);
          if (container) {
            const flavorItems = container.querySelectorAll('.flavor-item');
@@ -1081,7 +792,8 @@
                name: product.name,
                qty: qty,
                flavor: flavorName,
-               price: product.price
+               price: product.price,
+               description: product.description
              });
            });
          }
@@ -1096,7 +808,7 @@
      const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
      const total = subtotal + deliveryPrice;
 
-     // Формируем данные заказа с проверкой всех полей
+     // Формируем данные заказа
      const orderData = {
        type: "new_order",
        items: cartItems,
@@ -1109,19 +821,12 @@
        webapp_version: WEBAPP_VERSION
      };
 
-     // Проверяем данные перед отправкой
-     if (!validateOrderData(orderData)) {
-       alert("Ошибка в данных заказа. Пожалуйста, попробуйте еще раз.");
-       return;
-     }
+     console.log("Отправляемые данные:", orderData);
 
      // Отправка данных в Telegram бот
      if (window.Telegram && window.Telegram.WebApp) {
        try {
          tg.sendData(JSON.stringify(orderData));
-         
-         // Обновляем остатки только после успешной отправки
-         updateStockAfterOrder(cartItems);
          
          // Закрываем WebApp с небольшой задержкой
          setTimeout(() => {
@@ -1129,22 +834,204 @@
          }, 300);
        } catch (e) {
          console.error("Ошибка отправки данных в Telegram:", e);
-         alert("Заказ оформлен! Менеджер свяжется с вами.");
+         alert("Ошибка отправки заказа. Пожалуйста, попробуйте еще раз или свяжитесь с менеджером.");
        }
      } else {
        console.log("Данные заказа (тестовый режим):", orderData);
        alert("Заказ оформлен! Менеджер свяжется с вами.");
      }
-
-     // Обновляем интерфейс после заказа
-     renderProducts(currentFilter);
-     updateCartDisplay();
    }
 
-   // Обновление интерфейса при изменении остатков
-   function handleStockUpdate() {
-     renderProducts(currentFilter);
-     updateCartDisplay();
+   // Функции для админ-панели
+   function checkAdminAccess() {
+     const password = document.getElementById('adminPassword').value;
+     if (password === ADMIN_PASSWORD) {
+       localStorage.setItem('adminAccess', 'true');
+       document.getElementById('loginPanel').style.display = 'none';
+       document.getElementById('adminPanel').style.display = 'block';
+       initAdminPanel();
+     } else {
+       alert("Неверный пароль!");
+     }
+   }
+
+   function logoutAdmin() {
+     localStorage.removeItem('adminAccess');
+     location.reload();
+   }
+
+   function forceRefresh() {
+     localStorage.removeItem('tlpShopStock');
+     location.reload();
+   }
+
+   function initAdminPanel() {
+     const productSelect = document.getElementById('adminProductSelect');
+     productSelect.innerHTML = '<option value="">Выберите товар</option>';
+     
+     products.forEach(product => {
+       const option = document.createElement('option');
+       option.value = product.id;
+       option.textContent = product.name;
+       productSelect.appendChild(option);
+     });
+
+     productSelect.addEventListener('change', function() {
+       const productId = this.value;
+       const flavorSelect = document.getElementById('adminFlavorSelect');
+       const addFlavorBtn = document.getElementById('addFlavorBtn');
+       const removeFlavorBtn = document.getElementById('removeFlavorBtn');
+       const newFlavorName = document.getElementById('newFlavorName');
+       const flavorsList = document.getElementById('flavorsList');
+       
+       flavorSelect.innerHTML = '<option value="">Выберите вкус</option>';
+       
+       if (productId) {
+         const product = products.find(p => p.id == productId);
+         if (product.flavors && Object.keys(product.flavors).length > 0) {
+           flavorSelect.style.display = 'block';
+           addFlavorBtn.style.display = 'block';
+           removeFlavorBtn.style.display = 'block';
+           newFlavorName.style.display = 'block';
+           flavorsList.style.display = 'block';
+           
+           updateFlavorsList(productId);
+           
+           Object.keys(product.flavors).forEach(flavor => {
+             const option = document.createElement('option');
+             option.value = flavor;
+             option.textContent = `${flavor} (${product.flavors[flavor]} шт.)`;
+             flavorSelect.appendChild(option);
+           });
+         } else {
+           flavorSelect.style.display = 'none';
+           addFlavorBtn.style.display = 'none';
+           removeFlavorBtn.style.display = 'none';
+           newFlavorName.style.display = 'none';
+           flavorsList.style.display = 'none';
+         }
+       } else {
+         flavorSelect.style.display = 'none';
+         addFlavorBtn.style.display = 'none';
+         removeFlavorBtn.style.display = 'none';
+         newFlavorName.style.display = 'none';
+         flavorsList.style.display = 'none';
+       }
+     });
+   }
+
+   function updateFlavorsList(productId) {
+     const container = document.getElementById('flavorsListContainer');
+     container.innerHTML = '';
+     
+     const product = products.find(p => p.id == productId);
+     if (!product || !product.flavors) return;
+     
+     Object.entries(product.flavors).forEach(([flavor, qty]) => {
+       const item = document.createElement('div');
+       item.className = 'flavor-list-item';
+       item.innerHTML = `
+         <span>${flavor}: ${qty} шт.</span>
+         <button class="remove-flavor-admin" onclick="adminRemoveFlavor(${productId}, '${flavor}')">Удалить</button>
+       `;
+       container.appendChild(item);
+     });
+   }
+
+   function addNewFlavor() {
+     const productId = document.getElementById('adminProductSelect').value;
+     const flavorName = document.getElementById('newFlavorName').value.trim();
+     
+     if (!productId) {
+       alert("Выберите товар");
+       return;
+     }
+     
+     if (!flavorName) {
+       alert("Введите название вкуса");
+       return;
+     }
+     
+     const product = products.find(p => p.id == productId);
+     
+     if (!product.flavors) {
+       product.flavors = {};
+     }
+     
+     if (product.flavors[flavorName] !== undefined) {
+       alert("Этот вкус уже существует");
+       return;
+     }
+     
+     product.flavors[flavorName] = 5; // Устанавливаем стандартное количество
+     updateFlavorsList(productId);
+     document.getElementById('newFlavorName').value = '';
+     alert(`Вкус "${flavorName}" добавлен!`);
+   }
+
+   function removeSelectedFlavor() {
+     const productId = document.getElementById('adminProductSelect').value;
+     const flavor = document.getElementById('adminFlavorSelect').value;
+     
+     if (!productId || !flavor) {
+       alert("Выберите товар и вкус");
+       return;
+     }
+     
+     adminRemoveFlavor(productId, flavor);
+   }
+
+   function adminRemoveFlavor(productId, flavor) {
+     if (!confirm(`Удалить вкус "${flavor}"? Это действие нельзя отменить!`)) {
+       return;
+     }
+     
+     const product = products.find(p => p.id == productId);
+     
+     if (product && product.flavors && product.flavors[flavor] !== undefined) {
+       delete product.flavors[flavor];
+       
+       updateFlavorsList(productId);
+       
+       const flavorSelect = document.getElementById('adminFlavorSelect');
+       flavorSelect.innerHTML = '<option value="">Выберите вкус</option>';
+       Object.keys(product.flavors).forEach(f => {
+         const option = document.createElement('option');
+         option.value = f;
+         option.textContent = `${f} (${product.flavors[f]} шт.)`;
+         flavorSelect.appendChild(option);
+       });
+       
+       alert(`Вкус "${flavor}" удален!`);
+     }
+   }
+
+   function updateStock() {
+     const productId = document.getElementById('adminProductSelect').value;
+     const flavorSelect = document.getElementById('adminFlavorSelect');
+     const flavor = flavorSelect.style.display === 'none' ? null : flavorSelect.value;
+     const qty = parseInt(document.getElementById('adminQty').value);
+
+     if (!productId) {
+       alert("Выберите товар");
+       return;
+     }
+
+     if (flavorSelect.style.display !== 'none' && !flavor) {
+       alert("Выберите вкус");
+       return;
+     }
+
+     const product = products.find(p => p.id == productId);
+     
+     if (flavor) {
+       product.flavors[flavor] = qty;
+     } else {
+       product.stock = qty;
+     }
+
+     alert("Остатки обновлены!");
+     updateFlavorsList(productId);
    }
 
    // Инициализация при загрузке
@@ -1153,12 +1040,12 @@
      if (localStorage.getItem('adminAccess') === 'true') {
        document.getElementById('loginPanel').style.display = 'none';
        document.getElementById('adminPanel').style.display = 'block';
+       initAdminPanel();
      } else {
        document.getElementById('adminPanel').style.display = 'none';
      }
      
      renderProducts();
-     initAdminPanel();
      
      document.getElementById("delivery").addEventListener("change", function() {
        updateCartDisplay();
@@ -1169,17 +1056,8 @@
          addressField.style.display = "block";
        }
      });
-     
-     // Слушаем события обновления остатков
-     document.addEventListener('stockUpdated', handleStockUpdate);
-     
-     // Принудительное обновление при изменении версии
-     if (localStorage.getItem('forceRefresh') === 'true') {
-       localStorage.removeItem('forceRefresh');
-       location.reload();
-     }
    });
  </script>
 </body>
-</html> 
+</html>
 ```
