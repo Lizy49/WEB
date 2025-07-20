@@ -447,7 +447,7 @@
        price: 3700, 
        image: 'pod/1.jpg', 
        description: "Профессиональный под, регулируемая мощность, долгая работа от аккумулятора", 
-       flavors: {"Подик": 1} 
+       flavors: {"Жидкость": 1} 
      },
      { 
        id: 5, 
@@ -465,7 +465,7 @@
        price: 350, 
        image: 'vap/1.jpg', 
        description: "Профессиональный испаритель, долгий срок службы, качественные материалы", 
-       flavors: {"Испарик": 1} 
+       flavors: {"0.6 Ом": 1, "0.8 Ом": 1, "1.0 Ом": 1} 
      },
      { 
        id: 7, 
@@ -474,7 +474,7 @@
        price: 450, 
        image: 'vap/2.jpg', 
        description: "Картридж для испарителя, совместимость с xros, долгий срок службы", 
-       flavors: {"0.6": 1, "0.8": 1} 
+       flavors: {"0.6 Ом": 1, "0.8 Ом": 1} 
      },
      { 
        id: 8, 
@@ -540,13 +540,13 @@
          <p class="price">${product.price} ₽</p>
          ${product.flavors && Object.keys(product.flavors).length > 0 ? `
            <select class="flavor-select" id="flavor-${product.id}">
-             <option value="">-- Выберите вкус --</option>
+             <option value="">-- ${product.category === 'vaporizer' ? 'Выберите сопротивление' : product.category === 'pod' ? 'Выберите жидкость' : 'Выберите вкус'} --</option>
              ${flavorOptions}
            </select>
            <div class="stock-info" id="stock-${product.id}">
              ${stockInfo}
            </div>
-           <button class="add-flavor-btn" onclick="addFlavorToCart(${product.id})">Добавить вкус</button>
+           <button class="add-flavor-btn" onclick="addFlavorToCart(${product.id})">Добавить</button>
            <div id="selected-flavors-${product.id}"></div>
          ` : `
            <div class="stock-info">В наличии: <span class="stock-amount">${product.stock || 10} шт.</span></div>
@@ -567,7 +567,7 @@
      const selectedFlavor = flavorSelect.value;
      
      if (!selectedFlavor) {
-       alert("Сначала выберите вкус");
+       alert("Сначала сделайте выбор");
        return;
      }
      
